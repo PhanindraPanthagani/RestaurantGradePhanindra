@@ -1,0 +1,96 @@
+---
+title: "Restaurant_CaseStudy"
+author: "Phanindra Panthagani"
+date: "November 11, 2018"
+output:
+  word_document: default
+  html_document: default
+---
+
+
+
+```{r Restaurantgradeassignment}
+#import data from excel
+#library(readxl)
+#restaurant <- read_excel("E:/FALL2018UTD/WebAnalyticsMIS6344.501/assignments/Sec501_G3.xlsx",sheet = "ads_analysis%202_1fd2e6d3-bf38-")
+
+#Saving data to make knitting possible 
+#save(restaurant, file="restaurant.RData")
+load(file="restaurant.RData")
+View(restaurant)
+restaurant$treatment[restaurant$treatment==0]<- "control"
+restaurant$treatment[restaurant$treatment==2]<- "ad group2"
+restaurant$treatment[restaurant$treatment==1]<- "ad group1"
+
+rest_lm1<-lm(reservations~.,data=restaurant)
+summary(rest_lm1)
+
+#Business id variable is removed from the linear model since it is not significant (p values=0.665)
+rest_bid_rem=restaurant[,-5]
+#Converting treatment to factor variable
+rest_bid_rem$treatment <- as.factor(rest_bid_rem$treatment)
+rest_lm2<-lm(reservations~.,data=rest_bid_rem)
+summary(rest_lm2)
+
+
+
+
+
+
+
+#Q1:Should RG stick to current ad design, or switch to the alternative?
+
+
+#Ans:
+#RG should switch to the alternative ad design (ad group 2)
+#Compared to adgroup 1(base group in rest_lm2 linear model),the estimate value of ad group 2 is positive with a value of 7.866 and is significant. This means that reservations in adgroup 2 is 7.866 more than that of adgroup 1.
+#(Here, the outcome variable is chosen as reservations because the conversions  are more important than the page views and call enquiries.)
+
+
+##Q2:Which outcome variable is most useful to consider? Are there other outcome variables that may be useful to measure
+
+#Ans:
+#The most useful outcome variable to consider is reservations
+#The other outcome variables that may be be useful to measure could be page views and calls; but these would be more important for brand awareness. For profits and conversions, reservations would be a good outcome variable.
+
+##Question 3): Which add design is better for independent restaurants?
+
+#Choosing the interaction terms for better understanding
+rest_lm3_interactions<-lm(reservations~pageviews+calls+restaurant_type*treatment,data=rest_bid_rem)
+summary(rest_lm3_interactions)
+
+
+
+#Question3ans:)From the summary of the terms
+#restaurant_typeindependent:treatmentad group2 -0.6896075  0.1351644  -5.102 3.38e-07 *** 
+#restaurant_typeindependent:treatmentcontrol    0.4978785  0.1342049   3.710 0.000208 ***
+#Adgroup 1 is better for independent restaurants. 
+#Compared to ad group 1 ,ad group 2 for chain restaurants has 0.689 less number of reservations and control group has 0.497 more reservations 
+
+
+##Question 4:) 
+library(dplyr)
+rest_bid_rem$restaurant_type <- as.factor(rest_bid_rem$restaurant_type)
+levels(rest_bid_rem$restaurant_type)
+library(tidyverse)
+
+
+#Reversing the factor levels to get chain in the linear model instead of independent. Now we can easily interpret the interaction with chain and treatment
+rest_bid_rem$restaurant_type<-fct_rev(rest_bid_rem$restaurant_type)
+levels(rest_bid_rem$restaurant_type)
+rest_lm4_interactions<-lm(reservations~pageviews+calls+restaurant_type*treatment,data=rest_bid_rem)
+
+summary(rest_lm4_interactions)
+
+#
+##Q4ans:
+#From the summary of the terms
+#restaurant_typechain:treatmentad group2  0.6896075  0.1351644   5.102 3.38e-07 ***
+#restaurant_typechain:treatmentcontrol   -0.4978785  0.1342049  -3.710 0.000208 ***
+#Adgroup 2 is better for chain restaurants. 
+#Compared to ad group 1 ,ad group 2 for chain restaurants has 0.689 more number of reservations and control group has 0.497 less reservations. 
+
+```
+
+
+
